@@ -109,4 +109,30 @@ class CompteTest {
 		assertThat(compte.getSolde()).isEqualByComparingTo("100.01");
 	}
 
+	// C4 : debiter un montant strictement positif
+
+	@ParameterizedTest
+	@NullSource
+	@ValueSource(strings = {"0", "0.00", "-0.01", "-50"})
+	void shouldRejectDebitWhenAmountIsNotStrictlyPositive(BigDecimal montant) {
+		// Arrange
+		Compte compte = new Compte("FR001", "Alice", new BigDecimal("100.00"), new BigDecimal("200"));
+
+		// Act + Assert
+		assertThatIllegalArgumentException().isThrownBy(() -> compte.debiter(montant));
+		assertThat(compte.getSolde()).isEqualByComparingTo("100.00");
+	}
+
+	@Test
+	void shouldDecreaseBalanceWhenDebiting() {
+		// Arrange
+		Compte compte = new Compte("FR001", "Alice", new BigDecimal("100.00"), new BigDecimal("200"));
+
+		// Act
+		compte.debiter(new BigDecimal("30.00"));
+
+		// Assert
+		assertThat(compte.getSolde()).isEqualByComparingTo("70.00");
+	}
+
 }
