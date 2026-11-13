@@ -26,6 +26,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -127,6 +129,32 @@ class VirementServiceImplTest {
 		assertThat(source.getSolde()).isEqualByComparingTo("100.00");
 		assertThat(destination.getSolde()).isEqualByComparingTo("100.00");
 		verify(repository, never()).sauvegarder(any());
+	}
+
+	// V6 : alerte au titulaire source au-delà de 10 000 €
+
+	@Test
+	void shouldAlertSourceHolderWhenAmountIsAbove10000() {
+		// Arrange
+		comptesExistants(compte("FR001", "Alice", "20000.00"), compte("FR002", "Bob", "0.00"));
+
+		// Act
+		service.virer("FR001", "FR002", new BigDecimal("10000.01"));
+
+		// Assert
+		verify(notifications).alerter(eq("Alice"), anyString());
+	}
+
+	@Test
+	void shouldNotAlertWhenAmountIsExactly10000() {
+		// Arrange
+		comptesExistants(compte("FR001", "Alice", "20000.00"), compte("FR002", "Bob", "0.00"));
+
+		// Act
+		service.virer("FR001", "FR002", new BigDecimal("10000.00"));
+
+		// Assert
+		verify(notifications, never()).alerter(anyString(), anyString());
 	}
 
 	private void comptesExistants(Compte... comptes) {
