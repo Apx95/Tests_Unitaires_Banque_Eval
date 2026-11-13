@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CompteTest {
 
@@ -133,6 +134,35 @@ class CompteTest {
 
 		// Assert
 		assertThat(compte.getSolde()).isEqualByComparingTo("70.00");
+	}
+
+	// C5 : débit accepté jusqu'à -découvertAutorisé inclus
+
+	@ParameterizedTest(name = "solde 100, découvert 200 : débit de {0} -> solde {1}")
+	@CsvSource({
+			"299.99, -199.99",
+			"300.00, -200.00"
+	})
+	void shouldAcceptDebitUpToOverdraftLimit(BigDecimal montant, BigDecimal soldeAttendu) {
+		// Arrange
+		Compte compte = new Compte("FR001", "Alice", new BigDecimal("100.00"), new BigDecimal("200"));
+
+		// Act
+		compte.debiter(montant);
+
+		// Assert
+		assertThat(compte.getSolde()).isEqualByComparingTo(soldeAttendu);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"300.01", "500"})
+	void shouldRejectDebitBeyondOverdraftLimitAndKeepBalance(BigDecimal montant) {
+		// Arrange
+		Compte compte = new Compte("FR001", "Alice", new BigDecimal("100.00"), new BigDecimal("200"));
+
+		// Act + Assert
+		assertThatThrownBy(() -> compte.debiter(montant)).isInstanceOf(SoldeInsuffisantException.class);
+		assertThat(compte.getSolde()).isEqualByComparingTo("100.00");
 	}
 
 }
