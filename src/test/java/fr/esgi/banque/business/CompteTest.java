@@ -197,4 +197,24 @@ class CompteTest {
 		assertThat(compte.estVide()).isTrue();
 	}
 
+	// C7 : à découvert quand le solde est strictement négatif
+
+	@ParameterizedTest(name = "solde {0} -> à découvert : {1}")
+	@CsvSource({
+			"-0.01, true",
+			"-200, true",
+			"0, false",
+			"0.01, false"
+	})
+	void shouldBeOverdrawnOnlyWhenBalanceIsStrictlyNegative(BigDecimal solde, boolean decouvertAttendu) {
+		// Arrange
+		Compte compte = new Compte("FR001", "Alice", solde, new BigDecimal("200"));
+
+		// Act
+		boolean aDecouvert = compte.estADecouvert();
+
+		// Assert
+		assertThat(aDecouvert).isEqualTo(decouvertAttendu);
+	}
+
 }
