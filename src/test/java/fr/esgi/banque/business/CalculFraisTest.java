@@ -66,4 +66,21 @@ class CalculFraisTest {
 		assertThat(frais).isEqualByComparingTo(fraisAttendus);
 	}
 
+	// F4 : tenue offerte si le solde moyen atteint 1 000 €
+
+	@ParameterizedTest(name = "solde moyen {0} -> frais {1}")
+	@CsvSource({
+			"999.99, 2.00",
+			"1000, 0.00",
+			"1000.00, 0.00",
+			"1000.01, 0.00"
+	})
+	void shouldOfferAccountFeeFrom1000EurosAverageBalance(BigDecimal soldeMoyen, BigDecimal fraisAttendus) {
+		// Act
+		BigDecimal frais = calcul.fraisMensuels(40, soldeMoyen, false);
+
+		// Assert
+		assertThat(frais).isEqualByComparingTo(fraisAttendus);
+	}
+
 }
