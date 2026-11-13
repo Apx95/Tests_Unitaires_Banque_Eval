@@ -30,14 +30,13 @@ public class CalculFrais {
 		if (soldeMoyen == null) {
 			throw new IllegalArgumentException("Le solde moyen est obligatoire");
 		}
-		BigDecimal frais = FRAIS_TENUE;
-		if (ageTitulaire < AGE_JEUNE || soldeMoyen.compareTo(SEUIL_GRATUITE) >= 0) {
-			frais = BigDecimal.ZERO;
-		}
-		if (cartePremium) {
-			frais = frais.add(SUPPLEMENT_PREMIUM);
-		}
-		return frais;
+		BigDecimal fraisTenue = tenueOfferte(ageTitulaire, soldeMoyen) ? BigDecimal.ZERO : FRAIS_TENUE;
+		BigDecimal supplement = cartePremium ? SUPPLEMENT_PREMIUM : BigDecimal.ZERO;
+		return fraisTenue.add(supplement);
+	}
+
+	private boolean tenueOfferte(int ageTitulaire, BigDecimal soldeMoyen) {
+		return ageTitulaire < AGE_JEUNE || soldeMoyen.compareTo(SEUIL_GRATUITE) >= 0;
 	}
 
 }
