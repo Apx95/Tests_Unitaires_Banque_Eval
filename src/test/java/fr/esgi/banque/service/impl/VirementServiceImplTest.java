@@ -2,6 +2,7 @@ package fr.esgi.banque.service.impl;
 
 import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,16 +27,22 @@ class VirementServiceImplTest {
 	@Mock
 	private NotificationService notifications;
 
+	// mercredi 11 novembre 2026
+	private static final Clock MERCREDI = Clock.fixed(Instant.parse("2026-11-11T10:00:00Z"), ZoneId.of("Europe/Paris"));
+
+	private VirementServiceImpl service;
+
+	@BeforeEach
+	void setUp() {
+		service = new VirementServiceImpl(repository, notifications, MERCREDI);
+	}
+
 	// V1 : montant null, nul ou négatif refusé
 
 	@ParameterizedTest
 	@NullSource
 	@ValueSource(strings = {"0", "0.00", "-0.01", "-100"})
 	void shouldRejectAmountNotStrictlyPositive(BigDecimal montant) {
-		// Arrange
-		Clock horloge = Clock.fixed(Instant.parse("2026-11-11T10:00:00Z"), ZoneId.of("Europe/Paris"));
-		VirementServiceImpl service = new VirementServiceImpl(repository, notifications, horloge);
-
 		// Act + Assert
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> service.virer("FR001", "FR002", montant));
@@ -45,10 +52,6 @@ class VirementServiceImplTest {
 
 	@Test
 	void shouldRejectTransferToSameAccount() {
-		// Arrange
-		Clock horloge = Clock.fixed(Instant.parse("2026-11-11T10:00:00Z"), ZoneId.of("Europe/Paris"));
-		VirementServiceImpl service = new VirementServiceImpl(repository, notifications, horloge);
-
 		// Act + Assert
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> service.virer("FR001", "FR001", new BigDecimal("100.00")));
