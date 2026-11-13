@@ -1,5 +1,7 @@
 package fr.esgi.banque.service.impl;
 
+import fr.esgi.banque.business.Compte;
+import fr.esgi.banque.business.CompteIntrouvableException;
 import fr.esgi.banque.business.Virement;
 import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
@@ -26,6 +28,10 @@ public class VirementServiceImpl {
 		if (numeroSource.equals(numeroDestination)) {
 			throw new IllegalArgumentException("Le compte source et le compte destination doivent être différents");
 		}
+		Compte source = repository.trouver(numeroSource)
+				.orElseThrow(() -> new CompteIntrouvableException(numeroSource));
+		Compte destination = repository.trouver(numeroDestination)
+				.orElseThrow(() -> new CompteIntrouvableException(numeroDestination));
 		return null;
 	}
 
