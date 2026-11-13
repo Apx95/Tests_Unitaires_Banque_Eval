@@ -4,6 +4,7 @@ import fr.esgi.banque.business.Compte;
 import fr.esgi.banque.business.CompteIntrouvableException;
 import fr.esgi.banque.business.SoldeInsuffisantException;
 import fr.esgi.banque.business.Virement;
+import fr.esgi.banque.business.VirementRefuseException;
 import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -155,6 +156,20 @@ class VirementServiceImplTest {
 
 		// Assert
 		verify(notifications, never()).alerter(anyString(), anyString());
+	}
+
+	// V7 : aucun virement le dimanche
+
+	@Test
+	void shouldRefuseTransferOnSunday() {
+		// Arrange : dimanche 15 novembre 2026
+		Clock dimanche = Clock.fixed(Instant.parse("2026-11-15T10:00:00Z"), ZoneId.of("Europe/Paris"));
+		VirementServiceImpl serviceDuDimanche = new VirementServiceImpl(repository, notifications, dimanche);
+
+		// Act + Assert
+		assertThatThrownBy(() -> serviceDuDimanche.virer("FR001", "FR002", new BigDecimal("100.00")))
+				.isInstanceOf(VirementRefuseException.class);
+		verify(repository, never()).sauvegarder(any());
 	}
 
 	private void comptesExistants(Compte... comptes) {
