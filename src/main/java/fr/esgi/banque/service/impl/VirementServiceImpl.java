@@ -8,6 +8,7 @@ import fr.esgi.banque.service.NotificationService;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.LocalDate;
 
 public class VirementServiceImpl {
 
@@ -32,7 +33,11 @@ public class VirementServiceImpl {
 				.orElseThrow(() -> new CompteIntrouvableException(numeroSource));
 		Compte destination = repository.trouver(numeroDestination)
 				.orElseThrow(() -> new CompteIntrouvableException(numeroDestination));
-		return null;
+		destination.crediter(montant);
+		source.debiter(montant);
+		repository.sauvegarder(source);
+		repository.sauvegarder(destination);
+		return new Virement(numeroSource, numeroDestination, montant, LocalDate.now(horloge));
 	}
 
 }
