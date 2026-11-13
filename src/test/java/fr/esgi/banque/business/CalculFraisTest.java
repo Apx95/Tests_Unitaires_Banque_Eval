@@ -37,4 +37,15 @@ class CalculFraisTest {
 				.isThrownBy(() -> calcul.fraisMensuels(30, null, false));
 	}
 
+	// F2 : frais de tenue de 2,00 € par mois
+
+	@Test
+	void shouldChargeAccountFeeOf2Euros() {
+		// Act
+		BigDecimal frais = calcul.fraisMensuels(40, new BigDecimal("500"), false);
+
+		// Assert
+		assertThat(frais).isEqualByComparingTo("2.00");
+	}
+
 }
