@@ -3,11 +3,13 @@ package fr.esgi.banque.service.impl;
 import fr.esgi.banque.business.Compte;
 import fr.esgi.banque.business.CompteIntrouvableException;
 import fr.esgi.banque.business.Virement;
+import fr.esgi.banque.business.VirementRefuseException;
 import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 public class VirementServiceImpl {
@@ -30,6 +32,9 @@ public class VirementServiceImpl {
 		}
 		if (numeroSource.equals(numeroDestination)) {
 			throw new IllegalArgumentException("Le compte source et le compte destination doivent être différents");
+		}
+		if (LocalDate.now(horloge).getDayOfWeek() == DayOfWeek.SUNDAY) {
+			throw new VirementRefuseException("Aucun virement n'est accepté le dimanche");
 		}
 		Compte source = repository.trouver(numeroSource)
 				.orElseThrow(() -> new CompteIntrouvableException(numeroSource));
