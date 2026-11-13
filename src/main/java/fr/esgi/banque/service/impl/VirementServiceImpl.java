@@ -27,27 +27,51 @@ public class VirementServiceImpl {
 	}
 
 	public Virement virer(String numeroSource, String numeroDestination, BigDecimal montant) {
-		if (montant == null || montant.signum() <= 0) {
-			throw new IllegalArgumentException("Le montant du virement doit être strictement positif");
-		}
-		if (numeroSource.equals(numeroDestination)) {
-			throw new IllegalArgumentException("Le compte source et le compte destination doivent être différents");
-		}
-		if (LocalDate.now(horloge).getDayOfWeek() == DayOfWeek.SUNDAY) {
-			throw new VirementRefuseException("Aucun virement n'est accepté le dimanche");
-		}
-		Compte source = repository.trouver(numeroSource)
-				.orElseThrow(() -> new CompteIntrouvableException(numeroSource));
-		Compte destination = repository.trouver(numeroDestination)
-				.orElseThrow(() -> new CompteIntrouvableException(numeroDestination));
+		verifierMontant(montant);
+		verifierComptesDifferents(numeroSource, numeroDestination);
+		LocalDate aujourdhui = LocalDate.now(horloge);
+		verifierJourOuvert(aujourdhui);
+
+		Compte source = trouverCompte(numeroSource);
+		Compte destination = trouverCompte(numeroDestination);
+
 		source.debiter(montant);
 		destination.crediter(montant);
 		repository.sauvegarder(source);
 		repository.sauvegarder(destination);
-		if (montant.compareTo(SEUIL_ALERTE) > 0) {
-			notifications.alerter(source.getTitulaire(), "Virement de " + montant + " € depuis le compte " + numeroSource);
+
+		alerterSiMontantEleve(source, montant);
+		return new Virement(numeroSource, numeroDestination, montant, aujourdhui);
+	}
+
+	private void verifierMontant(BigDecimal montant) {
+		if (montant == null || montant.signum() <= 0) {
+			throw new IllegalArgumentException("Le montant du virement doit être strictement positif");
 		}
-		return new Virement(numeroSource, numeroDestination, montant, LocalDate.now(horloge));
+	}
+
+	private void verifierComptesDifferents(String numeroSource, String numeroDestination) {
+		if (numeroSource.equals(numeroDestination)) {
+			throw new IllegalArgumentException("Le compte source et le compte destination doivent être différents");
+		}
+	}
+
+	private void verifierJourOuvert(LocalDate date) {
+		if (date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+			throw new VirementRefuseException("Aucun virement n'est accepté le dimanche");
+		}
+	}
+
+	private Compte trouverCompte(String numero) {
+		return repository.trouver(numero)
+				.orElseThrow(() -> new CompteIntrouvableException(numero));
+	}
+
+	private void alerterSiMontantEleve(Compte source, BigDecimal montant) {
+		if (montant.compareTo(SEUIL_ALERTE) > 0) {
+			notifications.alerter(source.getTitulaire(),
+					"Virement de " + montant + " € depuis le compte " + source.getNumero());
+		}
 	}
 
 }
