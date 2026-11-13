@@ -2,6 +2,7 @@ package fr.esgi.banque.business;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -52,6 +53,33 @@ class CompteTest {
 	void shouldRejectMissingTitulaire(String titulaire) {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> new Compte("FR001", titulaire, new BigDecimal("100.00"), new BigDecimal("200")));
+	}
+
+	// C2 : solde initial et découvert obligatoires, découvert positif ou nul
+
+	@ParameterizedTest
+	@CsvSource(value = {
+			"NULL, 200",
+			"100.00, NULL"
+	}, nullValues = "NULL")
+	void shouldRejectMissingSoldeOrDecouvert(BigDecimal soldeInitial, BigDecimal decouvert) {
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> new Compte("FR001", "Alice", soldeInitial, decouvert));
+	}
+
+	@Test
+	void shouldRejectNegativeDecouvert() {
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> new Compte("FR001", "Alice", new BigDecimal("100.00"), new BigDecimal("-0.01")));
+	}
+
+	@Test
+	void shouldAcceptZeroDecouvert() {
+		// Act
+		Compte compte = new Compte("FR001", "Alice", new BigDecimal("100.00"), BigDecimal.ZERO);
+
+		// Assert
+		assertThat(compte.getDecouvertAutorise()).isEqualByComparingTo("0");
 	}
 
 }
