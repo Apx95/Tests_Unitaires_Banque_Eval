@@ -2,6 +2,7 @@ package fr.esgi.banque.service.impl;
 
 import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
@@ -38,6 +39,19 @@ class VirementServiceImplTest {
 		// Act + Assert
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> service.virer("FR001", "FR002", montant));
+	}
+
+	// V2 : virement vers le même compte refusé
+
+	@Test
+	void shouldRejectTransferToSameAccount() {
+		// Arrange
+		Clock horloge = Clock.fixed(Instant.parse("2026-11-11T10:00:00Z"), ZoneId.of("Europe/Paris"));
+		VirementServiceImpl service = new VirementServiceImpl(repository, notifications, horloge);
+
+		// Act + Assert
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> service.virer("FR001", "FR001", new BigDecimal("100.00")));
 	}
 
 }
