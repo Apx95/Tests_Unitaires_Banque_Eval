@@ -33,8 +33,8 @@ public class VirementServiceImpl {
 				.orElseThrow(() -> new CompteIntrouvableException(numeroSource));
 		Compte destination = repository.trouver(numeroDestination)
 				.orElseThrow(() -> new CompteIntrouvableException(numeroDestination));
-		destination.crediter(montant);
 		source.debiter(montant);
+		destination.crediter(montant);
 		repository.sauvegarder(source);
 		repository.sauvegarder(destination);
 		return new Virement(numeroSource, numeroDestination, montant, LocalDate.now(horloge));
