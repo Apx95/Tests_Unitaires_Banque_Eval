@@ -2,6 +2,7 @@ package fr.esgi.banque.service.impl;
 
 import fr.esgi.banque.business.Compte;
 import fr.esgi.banque.business.CompteIntrouvableException;
+import fr.esgi.banque.business.SoldeInsuffisantException;
 import fr.esgi.banque.business.Virement;
 import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
@@ -24,6 +25,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -107,6 +110,23 @@ class VirementServiceImplTest {
 		verify(repository).sauvegarder(source);
 		verify(repository).sauvegarder(destination);
 		assertThat(virement).isEqualTo(new Virement("FR001", "FR002", new BigDecimal("200.00"), LocalDate.of(2026, 11, 11)));
+	}
+
+	// V5 : solde insuffisant, rien n'est modifié ni sauvegardé
+
+	@Test
+	void shouldNotSaveAnythingWhenSourceBalanceIsInsufficient() {
+		// Arrange
+		Compte source = compte("FR001", "Alice", "100.00");
+		Compte destination = compte("FR002", "Bob", "100.00");
+		comptesExistants(source, destination);
+
+		// Act + Assert
+		assertThatThrownBy(() -> service.virer("FR001", "FR002", new BigDecimal("200.00")))
+				.isInstanceOf(SoldeInsuffisantException.class);
+		assertThat(source.getSolde()).isEqualByComparingTo("100.00");
+		assertThat(destination.getSolde()).isEqualByComparingTo("100.00");
+		verify(repository, never()).sauvegarder(any());
 	}
 
 	private void comptesExistants(Compte... comptes) {
