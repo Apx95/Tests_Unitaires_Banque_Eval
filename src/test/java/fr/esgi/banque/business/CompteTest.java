@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigDecimal;
@@ -80,6 +81,32 @@ class CompteTest {
 
 		// Assert
 		assertThat(compte.getDecouvertAutorise()).isEqualByComparingTo("0");
+	}
+
+	// C3 : crediter un montant strictement positif
+
+	@ParameterizedTest
+	@NullSource
+	@ValueSource(strings = {"0", "0.00", "-0.01", "-50"})
+	void shouldRejectCreditWhenAmountIsNotStrictlyPositive(BigDecimal montant) {
+		// Arrange
+		Compte compte = new Compte("FR001", "Alice", new BigDecimal("100.00"), new BigDecimal("200"));
+
+		// Act + Assert
+		assertThatIllegalArgumentException().isThrownBy(() -> compte.crediter(montant));
+		assertThat(compte.getSolde()).isEqualByComparingTo("100.00");
+	}
+
+	@Test
+	void shouldAcceptSmallestPositiveCredit() {
+		// Arrange
+		Compte compte = new Compte("FR001", "Alice", new BigDecimal("100.00"), new BigDecimal("200"));
+
+		// Act
+		compte.crediter(new BigDecimal("0.01"));
+
+		// Assert
+		assertThat(compte.getSolde()).isEqualByComparingTo("100.01");
 	}
 
 }
