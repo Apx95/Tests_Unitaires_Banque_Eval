@@ -96,8 +96,7 @@ class VirementServiceImplTest {
 		// Arrange
 		Compte source = compte("FR001", "Alice", "500.00");
 		Compte destination = compte("FR002", "Bob", "100.00");
-		when(repository.trouver("FR001")).thenReturn(Optional.of(source));
-		when(repository.trouver("FR002")).thenReturn(Optional.of(destination));
+		comptesExistants(source, destination);
 
 		// Act
 		Virement virement = service.virer("FR001", "FR002", new BigDecimal("200.00"));
@@ -108,6 +107,12 @@ class VirementServiceImplTest {
 		verify(repository).sauvegarder(source);
 		verify(repository).sauvegarder(destination);
 		assertThat(virement).isEqualTo(new Virement("FR001", "FR002", new BigDecimal("200.00"), LocalDate.of(2026, 11, 11)));
+	}
+
+	private void comptesExistants(Compte... comptes) {
+		for (Compte compte : comptes) {
+			when(repository.trouver(compte.getNumero())).thenReturn(Optional.of(compte));
+		}
 	}
 
 	private static Compte compte(String numero, String titulaire, String solde) {
